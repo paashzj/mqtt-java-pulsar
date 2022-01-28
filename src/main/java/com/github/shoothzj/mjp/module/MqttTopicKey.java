@@ -17,19 +17,21 @@
  * under the License.
  */
 
-package com.github.shoothzj.mjp;
+package com.github.shoothzj.mjp.module;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
-public class MqsarConfig {
+@EqualsAndHashCode
+public class MqttTopicKey {
 
-    private String host;
+    private String topic;
 
-    private int port;
+    private MqttSessionKey mqttSessionKey;
 
-    public MqsarConfig() {
+    public MqttTopicKey() {
     }
 }

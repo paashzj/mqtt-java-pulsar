@@ -19,6 +19,8 @@
 
 package com.github.shoothzj.mjp;
 
+import com.github.shoothzj.mjp.module.MqttSessionKey;
+import com.github.shoothzj.mjp.module.MqttTopicKey;
 import com.github.shoothzj.mjp.util.MqttMessageUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
@@ -27,10 +29,38 @@ import io.netty.handler.codec.mqtt.MqttPubAckMessage;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.client.api.Consumer;
+import org.apache.pulsar.client.api.Producer;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+@Slf4j
 public class MqsarProcessor {
 
+    private final ReentrantReadWriteLock.ReadLock rLock;
+
+    private final ReentrantReadWriteLock.WriteLock wLock;
+
+    private final Map<MqttSessionKey, List<MqttTopicKey>> sessionProducerMap;
+
+    private final Map<MqttSessionKey, List<MqttTopicKey>> sessionConsumerMap;
+
+    private final Map<MqttTopicKey, Producer<byte[]>> producerMap;
+
+    private final Map<MqttTopicKey, Consumer<byte[]>> consumerMap;
+
     public MqsarProcessor() {
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        rLock = lock.readLock();
+        wLock = lock.writeLock();
+        this.sessionProducerMap = new HashMap<>();
+        this.sessionConsumerMap = new HashMap<>();
+        this.producerMap = new HashMap<>();
+        this.consumerMap = new HashMap<>();
     }
 
     void processConnect(ChannelHandlerContext ctx, MqttConnectMessage msg) {
