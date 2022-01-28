@@ -19,6 +19,7 @@
 
 package com.github.shoothzj.mjp;
 
+import com.github.shoothzj.mjp.config.MqsarConfig;
 import com.github.shoothzj.mjp.util.EventLoopUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -43,7 +44,7 @@ public class MqsarBroker {
         serverBootstrap.group(acceptorGroup, workerGroup);
         serverBootstrap.channel(EventLoopUtil.getServerSocketChannelClass(workerGroup));
         serverBootstrap.childHandler(new MqttChannelInitializer());
-        serverBootstrap.bind(mqsarConfig.getHost(), mqsarConfig.getPort());
+        serverBootstrap.bind(mqsarConfig.getMqttConfig().getHost(), mqsarConfig.getMqttConfig().getPort());
     }
 
 }
