@@ -17,13 +17,13 @@
 # under the License.
 #
 
-FROM ttbb/compile:jdk11-git-mvn AS build
+FROM ttbb/compile:jdk17-git-mvn AS build
 COPY . /opt/sh/compile
 WORKDIR /opt/sh/compile
 RUN mvn -B clean package
 
 
-FROM ttbb/base:jdk11
+FROM ttbb/base:jdk17
 
 LABEL maintainer="shoothzj@gmail.com"
 
