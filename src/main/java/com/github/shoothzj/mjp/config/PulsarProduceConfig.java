@@ -24,18 +24,10 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class PulsarConfig {
+public class PulsarProduceConfig {
 
-    private String host;
+    private boolean disableBatching;
 
-    private int httpPort;
-
-    private int tcpPort;
-
-    private PulsarProduceConfig produceConfig;
-
-    private PulsarConsumeConfig consumeConfig;
-
-    public PulsarConfig() {
+    public PulsarProduceConfig() {
     }
 }

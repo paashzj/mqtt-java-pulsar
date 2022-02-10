@@ -22,6 +22,8 @@ package com.github.shoothzj.mjp;
 import com.github.shoothzj.mjp.config.MqsarConfig;
 import com.github.shoothzj.mjp.config.MqttConfig;
 import com.github.shoothzj.mjp.config.PulsarConfig;
+import com.github.shoothzj.mjp.config.PulsarConsumeConfig;
+import com.github.shoothzj.mjp.config.PulsarProduceConfig;
 import com.github.shoothzj.mjp.constant.ConfigConst;
 import com.github.shoothzj.mjp.util.EnvUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +47,14 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_HTTP_PORT_ENV_NAME, ConfigConst.PULSAR_HTTP_PORT_DEFAULT_VALUE));
         pulsarConfig.setTcpPort(EnvUtil.getIntVar(ConfigConst.PULSAR_TCP_PORT_PROPERTY_NAME,
                 ConfigConst.PULSAR_TCP_PORT_ENV_NAME, ConfigConst.PULSAR_TCP_PORT_DEFAULT_VALUE));
-        pulsarConfig.setDisableBatching(EnvUtil.getBooleanVar(ConfigConst.PULSAR_DISABLE_BATCHING_PROPERTY_NAME,
-                ConfigConst.PULSAR_DISABLE_BATCHING_ENV_NAME, ConfigConst.PULSAR_DISABLE_BATCHING_DEFAULT_VALUE));
+        PulsarProduceConfig pulsarProduceConfig = new PulsarProduceConfig();
+        pulsarProduceConfig.setDisableBatching(EnvUtil.getBooleanVar(
+                ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_PROPERTY_NAME,
+                ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_ENV_NAME,
+                ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_DEFAULT_VALUE));
+        pulsarConfig.setProduceConfig(pulsarProduceConfig);
+        PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
+        pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig);
         mqsarBroker.start();
     }
