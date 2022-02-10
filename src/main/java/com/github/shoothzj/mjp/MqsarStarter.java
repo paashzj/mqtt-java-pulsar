@@ -46,7 +46,7 @@ public class MqsarStarter {
         pulsarConfig.setTcpPort(EnvUtil.getIntVar(ConfigConst.PULSAR_TCP_PORT_PROPERTY_NAME,
                 ConfigConst.PULSAR_TCP_PORT_ENV_NAME, ConfigConst.PULSAR_TCP_PORT_DEFAULT_VALUE));
         pulsarConfig.setDisableBatching(EnvUtil.getBooleanVar(ConfigConst.PULSAR_DISABLE_BATCHING_PROPERTY_NAME,
-                ConfigConst.PULSAR_DISABLE_BATCHING_ENV_NAME, false));
+                ConfigConst.PULSAR_DISABLE_BATCHING_ENV_NAME, ConfigConst.PULSAR_DISABLE_BATCHING_DEFAULT_VALUE));
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig);
         mqsarBroker.start();
     }

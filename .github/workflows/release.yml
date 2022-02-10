@@ -19,7 +19,10 @@
 
 name: Release
 
-on: push
+on:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -42,7 +45,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: mqtt-java-pulsar
+          tags: ttbb/mqtt-java-pulsar:latest
           platforms: linux/amd64,linux/arm64
       - name: Save Docker Images
         run: docker pull ttbb/mqtt-java-pulsar:latest;docker save ttbb/mqtt-java-pulsar:latest -o mqtt-java-pulsar.tar.gz
