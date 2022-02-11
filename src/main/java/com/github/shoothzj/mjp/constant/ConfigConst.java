@@ -51,10 +51,10 @@ public class ConfigConst {
 
     public static final int PULSAR_TCP_PORT_DEFAULT_VALUE = 6650;
 
-    public static final String PULSAR_DISABLE_BATCHING_PROPERTY_NAME = "mqsar.pulsar.disableBatching";
+    public static final String PULSAR_PRODUCE_DISABLE_BATCHING_PROPERTY_NAME = "mqsar.pulsar.produce.disableBatching";
 
-    public static final String PULSAR_DISABLE_BATCHING_ENV_NAME = "MQSAR_PULSAR_DISABLE_BATCHING";
+    public static final String PULSAR_PRODUCE_DISABLE_BATCHING_ENV_NAME = "MQSAR_PULSAR_PRODUCE_DISABLE_BATCHING";
 
-    public static final boolean PULSAR_DISABLE_BATCHING_DEFAULT_VALUE = false;
+    public static final boolean PULSAR_PRODUCE_DISABLE_BATCHING_DEFAULT_VALUE = false;
 
 }
