@@ -47,4 +47,24 @@ public class MqsarBroker {
         serverBootstrap.bind(mqsarConfig.getMqttConfig().getHost(), mqsarConfig.getMqttConfig().getPort());
     }
 
+    public String getMqttHost() {
+        return mqsarConfig.getMqttConfig().getHost();
+    }
+
+    public int getMqttPort() {
+        return mqsarConfig.getMqttConfig().getPort();
+    }
+
+    public String getPulsarHost() {
+        return mqsarConfig.getPulsarConfig().getHost();
+    }
+
+    public int getPulsarHttpPort() {
+        return mqsarConfig.getPulsarConfig().getHttpPort();
+    }
+
+    public int getPulsarTcpPort() {
+        return mqsarConfig.getPulsarConfig().getTcpPort();
+    }
+
 }
