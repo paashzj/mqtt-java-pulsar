@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -25,12 +25,17 @@ import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 
 public class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
+    private MqsarServer mqsarServer;
+
+    public MqttChannelInitializer(MqsarServer mqsarServer) {
+        this.mqsarServer = mqsarServer;
+    }
 
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         socketChannel.pipeline().addLast("decoder", new MqttDecoder(1024 * 1024));
         socketChannel.pipeline().addLast("encoder", MqttEncoder.INSTANCE);
-        socketChannel.pipeline().addLast("handler", new MqttInboundHandler(new MqsarProcessor()));
+        socketChannel.pipeline().addLast("handler", new MqttInboundHandler(new MqsarProcessor(mqsarServer)));
     }
 
 }

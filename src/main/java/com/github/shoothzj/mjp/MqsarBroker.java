@@ -29,12 +29,17 @@ public class MqsarBroker {
 
     private final MqsarConfig mqsarConfig;
 
+    private final MqsarServer mqsarServer;
+
     private final EventLoopGroup acceptorGroup;
 
     private final EventLoopGroup workerGroup;
 
-    public MqsarBroker(MqsarConfig mqsarConfig) {
+
+
+    public MqsarBroker(MqsarConfig mqsarConfig , MqsarServer mqsarServer) {
         this.mqsarConfig = mqsarConfig;
+        this.mqsarServer = mqsarServer;
         this.acceptorGroup = EventLoopUtil.newEventLoopGroup(1, new DefaultThreadFactory("mqtt-acceptor"));
         this.workerGroup = EventLoopUtil.newEventLoopGroup(1, new DefaultThreadFactory("mqtt-worker"));
     }
@@ -43,7 +48,7 @@ public class MqsarBroker {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(acceptorGroup, workerGroup);
         serverBootstrap.channel(EventLoopUtil.getServerSocketChannelClass(workerGroup));
-        serverBootstrap.childHandler(new MqttChannelInitializer());
+        serverBootstrap.childHandler(new MqttChannelInitializer(mqsarServer));
         serverBootstrap.bind(mqsarConfig.getMqttConfig().getHost(), mqsarConfig.getMqttConfig().getPort());
     }
 
