@@ -30,7 +30,7 @@
     <parent>
         <groupId>com.github.shoothzj</groupId>
         <artifactId>java-dependency</artifactId>
-        <version>3.1.16</version>
+        <version>3.1.17</version>
     </parent>
 
     <properties>
@@ -50,7 +50,6 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-            <version>2.9.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -68,7 +67,7 @@
         <dependency>
             <groupId>com.github.shoothzj</groupId>
             <artifactId>test-pulsar</artifactId>
-            <version>3.1.7</version>
+            <version>3.1.8</version>
             <scope>test</scope>
         </dependency>
         <dependency>

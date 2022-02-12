@@ -54,6 +54,11 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_DEFAULT_VALUE));
         pulsarConfig.setProduceConfig(pulsarProduceConfig);
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
+        pulsarConsumeConfig.setReceiverQueueSize(EnvUtil.getIntVar(
+                ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_PROPERTY_NAME,
+                ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_ENV_NAME,
+                ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE
+        ));
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig);
         mqsarBroker.start();
