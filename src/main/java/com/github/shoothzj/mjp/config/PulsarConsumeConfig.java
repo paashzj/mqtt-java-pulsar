@@ -26,6 +26,8 @@ import lombok.Setter;
 @Getter
 public class PulsarConsumeConfig {
 
+    private int receiverQueueSize;
+
     public PulsarConsumeConfig() {
     }
 }

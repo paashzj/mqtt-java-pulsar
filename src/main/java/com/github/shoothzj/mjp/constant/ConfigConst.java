@@ -57,4 +57,11 @@ public class ConfigConst {
 
     public static final boolean PULSAR_PRODUCE_DISABLE_BATCHING_DEFAULT_VALUE = false;
 
+    public static final String PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_PROPERTY_NAME =
+            "mqsar.pulsar.consume.receiverQueueSize";
+
+    public static final String PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_ENV_NAME = "MQSAR_PULSAR_CONSUME_RECEIVER_QUEUE_SIZE";
+
+    public static final int PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE = 1000;
+
 }
