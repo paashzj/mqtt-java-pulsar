@@ -52,6 +52,10 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_PROPERTY_NAME,
                 ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_ENV_NAME,
                 ConfigConst.PULSAR_PRODUCE_DISABLE_BATCHING_DEFAULT_VALUE));
+        pulsarProduceConfig.setMaxPendingMessages(EnvUtil.getIntVar(
+                ConfigConst.PULSAR_PRODUCE_MAX_PENDING_MESSAGES_PROPERTY_NAME,
+                ConfigConst.PULSAR_PRODUCE_MAX_PENDING_MESSAGES_ENV_NAME,
+                ConfigConst.PULSAR_PRODUCE_MAX_PENDING_MESSAGES_DEFAULT_VALUE));
         pulsarConfig.setProduceConfig(pulsarProduceConfig);
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
         pulsarConsumeConfig.setReceiverQueueSize(EnvUtil.getIntVar(
