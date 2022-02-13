@@ -57,7 +57,7 @@ public class MqsarTestUtil {
         pulsarConfig.setProduceConfig(pulsarProduceConfig);
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
-        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig);
+        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, (username, password, clientId) -> true);
         new Thread(mqsarBroker::start).start();
         Thread.sleep(5000L);
         return mqsarBroker;

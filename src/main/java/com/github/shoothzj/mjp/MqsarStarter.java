@@ -64,7 +64,7 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE
         ));
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
-        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig);
+        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, (username, password, clientId) -> true);
         mqsarBroker.start();
     }
 
