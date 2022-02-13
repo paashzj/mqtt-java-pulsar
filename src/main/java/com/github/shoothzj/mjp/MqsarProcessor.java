@@ -67,6 +67,63 @@ public class MqsarProcessor {
     }
 
     void processConnect(ChannelHandlerContext ctx, MqttConnectMessage msg) {
+        Channel channel = ctx.channel();
+        if (msg.decoderResult().isFailure()) {
+            Throwable cause = msg.decoderResult().cause();
+            if (cause instanceof MqttUnacceptableProtocolVersionException) {
+                // Unsupported protocol version
+                MqttConnAckMessage connAckMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
+                        new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                        new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION, false), null);
+                channel.writeAndFlush(connAckMessage);
+                log.error("connection refused due to invalid protocol, client address[{}]", channel.remoteAddress());
+                channel.close();
+                return;
+            } else if (cause instanceof MqttIdentifierRejectedException) {
+                // ineligible clientId
+                MqttConnAckMessage connAckMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
+                        new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                        new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED, false), null);
+                channel.writeAndFlush(connAckMessage);
+                log.error("ineligible clientId, client address[{}]", channel.remoteAddress());
+                channel.close();
+                return;
+            }
+            channel.close();
+            return;
+        }
+        String clientId = msg.payload().clientIdentifier();
+        String username= msg.payload().userName();
+        String pwd = msg.payload().password();
+        if (StringUtils.isBlank(clientId) || StringUtils.isBlank(username) || StringUtils.isBlank(pwd)) {
+            MqttConnAckMessage connAckMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
+                    new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                    new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED, false), null);
+            channel.writeAndFlush(connAckMessage);
+            log.error("the clientId username pwd cannot be empty, client address[{}]", channel.remoteAddress());
+            channel.close();
+            return;
+        }
+
+        if (!mqsarServer.MqttAuth(username,pwd,clientId)) {
+            MqttConnAckMessage connAckMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
+                    new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                    new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER, false), null);
+            channel.writeAndFlush(connAckMessage);
+            channel.close();
+            return;
+        }
+
+        MqttSessionKey mqttSessionKey = new MqttSessionKey();
+        mqttSessionKey.setClientId(clientId);
+        mqttSessionKey.setUsername(username);
+        sessionProducerMap.put(mqttSessionKey, Lists.newArrayList());
+        sessionConsumerMap.put(mqttSessionKey, Lists.newArrayList());
+        MqttConnAckMessage mqttConnectMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
+                new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_ACCEPTED, false),
+                null);
+        channel.writeAndFlush(mqttConnectMessage);
     }
 
     void processPubAck(ChannelHandlerContext ctx, MqttPubAckMessage msg) {
