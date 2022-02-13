@@ -28,6 +28,8 @@ public class PulsarProduceConfig {
 
     private boolean disableBatching;
 
+    private int maxPendingMessages;
+
     public PulsarProduceConfig() {
     }
 }

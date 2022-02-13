@@ -57,6 +57,14 @@ public class ConfigConst {
 
     public static final boolean PULSAR_PRODUCE_DISABLE_BATCHING_DEFAULT_VALUE = false;
 
+    public static final String PULSAR_PRODUCE_MAX_PENDING_MESSAGES_PROPERTY_NAME =
+            "mqsar.pulsar.produce.maxPendingMessages";
+
+    public static final String PULSAR_PRODUCE_MAX_PENDING_MESSAGES_ENV_NAME =
+            "MQSAR_PULSAR_PRODUCE_MAX_PENDING_MESSAGES";
+
+    public static final int PULSAR_PRODUCE_MAX_PENDING_MESSAGES_DEFAULT_VALUE = 1000;
+
     public static final String PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_PROPERTY_NAME =
             "mqsar.pulsar.consume.receiverQueueSize";
 
