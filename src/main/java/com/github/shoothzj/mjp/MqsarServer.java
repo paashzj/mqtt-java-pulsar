@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,19 +17,14 @@
  * under the License.
  */
 
-package com.github.shoothzj.mjp.config;
+package com.github.shoothzj.mjp;
 
-import lombok.Getter;
-import lombok.Setter;
+public interface MqsarServer {
 
-@Setter
-@Getter
-public class PulsarProduceConfig {
+    boolean mqttAuth(String username, String password, String clientId);
 
-    private boolean disableBatching;
+    String mqttProduceTopic(String username, String clientId, String topic);
 
-    private int maxPendingMessages;
+    String mqttConsumeTopic(String username, String clientId, String topic);
 
-    public PulsarProduceConfig() {
-    }
 }
