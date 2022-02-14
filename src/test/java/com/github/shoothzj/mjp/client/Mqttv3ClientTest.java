@@ -37,7 +37,7 @@ public class Mqttv3ClientTest {
 
     @Before
     public void start() throws Exception{
-            mqsarBroker = MqsarTestUtil.setupMqsar();
+        mqsarBroker = MqsarTestUtil.setupMqsar();
     }
 
     @Test
