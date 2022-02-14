@@ -73,7 +73,7 @@ public class Mqttv3ClientTest {
     }
 
     @After
-    public void end(){
+    public void end() {
 
     }
 
