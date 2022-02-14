@@ -19,9 +19,6 @@
 
 package com.github.shoothzj.mjp;
 
-
-import java.util.Optional;
-
 public interface MqsarServer {
 
     boolean mqttAuth(String username, String password, String clientId);
