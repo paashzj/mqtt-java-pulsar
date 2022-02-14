@@ -46,7 +46,7 @@ public class MqsarBroker {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(acceptorGroup, workerGroup);
         serverBootstrap.channel(EventLoopUtil.getServerSocketChannelClass(workerGroup));
-        serverBootstrap.childHandler(new MqttChannelInitializer((username, password, clientId) -> true));
+        serverBootstrap.childHandler(new MqttChannelInitializer(mqsarServer));
         serverBootstrap.bind(mqsarConfig.getMqttConfig().getHost(), mqsarConfig.getMqttConfig().getPort());
     }
 

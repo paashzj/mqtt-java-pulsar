@@ -20,6 +20,7 @@
 package com.github.shoothzj.mjp.integrate;
 
 import com.github.shoothzj.mjp.MqsarBroker;
+import com.github.shoothzj.mjp.MqsarServer;
 import com.github.shoothzj.mjp.config.MqsarConfig;
 import com.github.shoothzj.mjp.config.MqttConfig;
 import com.github.shoothzj.mjp.config.PulsarConfig;
@@ -57,7 +58,22 @@ public class MqsarTestUtil {
         pulsarConfig.setProduceConfig(pulsarProduceConfig);
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
-        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, (username, password, clientId) -> true);
+        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
+            @Override
+            public boolean mqttAuth(String username, String password, String clientId) {
+                return true;
+            }
+
+            @Override
+            public String mqttProduceTopic(String username, String clientId, String topic) {
+                return String.format("persistent://public/default/%s", topic);
+            }
+
+            @Override
+            public String mqttConsumeTopic(String username, String clientId, String topic) {
+                return String.format("persistent://public/default/%s", topic);
+            }
+        });
         new Thread(mqsarBroker::start).start();
         Thread.sleep(5000L);
         return mqsarBroker;
