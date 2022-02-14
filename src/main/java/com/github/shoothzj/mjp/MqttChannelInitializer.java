@@ -26,11 +26,17 @@ import io.netty.handler.codec.mqtt.MqttEncoder;
 
 public class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    private final MqsarServer mqsarServer;
+
+    public MqttChannelInitializer(MqsarServer mqsarServer) {
+        this.mqsarServer = mqsarServer;
+    }
+
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         socketChannel.pipeline().addLast("decoder", new MqttDecoder(1024 * 1024));
         socketChannel.pipeline().addLast("encoder", MqttEncoder.INSTANCE);
-        socketChannel.pipeline().addLast("handler", new MqttInboundHandler(new MqsarProcessor()));
+        socketChannel.pipeline().addLast("handler", new MqttInboundHandler(new MqsarProcessor(mqsarServer)));
     }
 
 }

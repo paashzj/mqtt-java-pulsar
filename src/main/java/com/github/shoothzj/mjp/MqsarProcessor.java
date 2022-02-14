@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -25,21 +25,23 @@ import com.github.shoothzj.mjp.util.MqttMessageUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttMessage;
-import io.netty.handler.codec.mqtt.MqttPubAckMessage;
-import io.netty.handler.codec.mqtt.MqttPublishMessage;
-import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
+import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
+import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import io.netty.handler.codec.mqtt.MqttPubAckMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Producer;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 public class MqsarProcessor {
+
+    private final MqsarServer mqsarServer;
 
     private final ReentrantReadWriteLock.ReadLock rLock;
 
@@ -53,7 +55,8 @@ public class MqsarProcessor {
 
     private final Map<MqttTopicKey, Consumer<byte[]>> consumerMap;
 
-    public MqsarProcessor() {
+    public MqsarProcessor(MqsarServer mqsarServer) {
+        this.mqsarServer = mqsarServer;
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         rLock = lock.readLock();
         wLock = lock.writeLock();
@@ -82,6 +85,7 @@ public class MqsarProcessor {
     }
 
     void processDisconnect(ChannelHandlerContext ctx, MqttMessage msg) {
+        ctx.channel().close();
     }
 
     void processConnectionLost(ChannelHandlerContext ctx) {

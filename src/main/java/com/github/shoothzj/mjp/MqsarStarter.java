@@ -64,7 +64,22 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE
         ));
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
-        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig);
+        MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
+            @Override
+            public boolean mqttAuth(String username, String password, String clientId) {
+                return true;
+            }
+
+            @Override
+            public String mqttProduceTopic(String username, String clientId, String topic) {
+                return String.format("persistent://public/default/%s", topic);
+            }
+
+            @Override
+            public String mqttConsumeTopic(String username, String clientId, String topic) {
+                return String.format("persistent://public/default/%s", topic);
+            }
+        });
         mqsarBroker.start();
     }
 
