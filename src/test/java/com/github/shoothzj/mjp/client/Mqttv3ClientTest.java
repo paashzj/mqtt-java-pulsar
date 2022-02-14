@@ -42,6 +42,5 @@ public class Mqttv3ClientTest {
         MqttClient mqttClient = new MqttClient(url, "clientId001");
         mqttClient.connect(connectOpt);
         Assert.assertTrue(mqttClient.isConnected());
-
     }
 }
