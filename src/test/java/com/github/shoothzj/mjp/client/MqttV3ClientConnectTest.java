@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 @Slf4j
-public class Mqttv3ClientTest {
+public class MqttV3ClientConnectTest {
 
     private MqsarBroker mqsarBroker;
 
@@ -65,7 +65,7 @@ public class Mqttv3ClientTest {
         try {
             mqttClient = new MqttClient(url, "clientId001");
             mqttClient.connect(connectOpt);
-        } catch (MqttException e) {
+        } catch (MqttException ignored) {
         }
         assert mqttClient != null;
         Assert.assertFalse(mqttClient.isConnected());
