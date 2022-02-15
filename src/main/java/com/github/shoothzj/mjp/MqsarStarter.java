@@ -66,7 +66,7 @@ public class MqsarStarter {
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
-            public boolean mqttAuth(String username, String password, String clientId) {
+            public boolean mqttAuth(String username, byte[] password, String clientId) {
                 return true;
             }
 

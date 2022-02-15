@@ -17,26 +17,21 @@
  * under the License.
  */
 
-package com.github.shoothzj.mjp;
+package com.github.shoothzj.mjp.util;
 
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.mqtt.MqttDecoder;
-import io.netty.handler.codec.mqtt.MqttEncoder;
+import lombok.extern.slf4j.Slf4j;
 
-public class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
+import java.io.Closeable;
 
-    private final MqsarProcessor mqsarProcessor;
+@Slf4j
+public class ClosableUtils {
 
-    public MqttChannelInitializer(MqsarServer mqsarServer) {
-        this.mqsarProcessor = new MqsarProcessor(mqsarServer);
-    }
-
-    @Override
-    protected void initChannel(SocketChannel socketChannel) throws Exception {
-        socketChannel.pipeline().addLast("decoder", new MqttDecoder(1024 * 1024));
-        socketChannel.pipeline().addLast("encoder", MqttEncoder.INSTANCE);
-        socketChannel.pipeline().addLast("handler", new MqttInboundHandler(mqsarProcessor));
+    public static void close(Closeable closeable) {
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            log.error("close failed exception is ", e);
+        }
     }
 
 }
