@@ -58,23 +58,30 @@ public class MqsarTestUtil {
         pulsarConfig.setProduceConfig(pulsarProduceConfig);
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
+        mqsarConfig.setPulsarConfig(pulsarConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
-            public boolean mqttAuth(String username, byte[] password, String clientId) {
+            public boolean auth(String username, byte[] password, String clientId) {
                 return true;
             }
 
             @Override
-            public String mqttProduceTopic(String username, String clientId, String topic) {
+            public String produceTopic(String username, String clientId, String topic) {
                 return String.format("persistent://public/default/%s", topic);
             }
 
             @Override
-            public String mqttConsumeTopic(String username, String clientId, String topic) {
+            public String consumeTopic(String username, String clientId, String topic) {
                 return String.format("persistent://public/default/%s", topic);
             }
         });
-        new Thread(mqsarBroker::start).start();
+        new Thread(() -> {
+            try {
+                mqsarBroker.start();
+            } catch (Exception e) {
+                log.error("mqsar broker started exception ", e);
+            }
+        }).start();
         Thread.sleep(5000L);
         return mqsarBroker;
     }

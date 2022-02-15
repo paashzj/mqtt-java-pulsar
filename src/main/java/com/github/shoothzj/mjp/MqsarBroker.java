@@ -42,11 +42,11 @@ public class MqsarBroker {
         this.workerGroup = EventLoopUtil.newEventLoopGroup(1, new DefaultThreadFactory("mqtt-worker"));
     }
 
-    public void start() {
+    public void start() throws Exception {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(acceptorGroup, workerGroup);
         serverBootstrap.channel(EventLoopUtil.getServerSocketChannelClass(workerGroup));
-        serverBootstrap.childHandler(new MqttChannelInitializer(mqsarServer));
+        serverBootstrap.childHandler(new MqttChannelInitializer(mqsarServer, mqsarConfig));
         serverBootstrap.bind(mqsarConfig.getMqttConfig().getHost(), mqsarConfig.getMqttConfig().getPort());
     }
 
