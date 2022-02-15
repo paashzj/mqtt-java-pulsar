@@ -58,6 +58,7 @@ public class MqsarTestUtil {
         pulsarConfig.setProduceConfig(pulsarProduceConfig);
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
+        mqsarConfig.setPulsarConfig(pulsarConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
             public boolean auth(String username, byte[] password, String clientId) {

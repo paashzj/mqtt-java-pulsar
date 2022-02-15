@@ -20,7 +20,6 @@
 package com.github.shoothzj.mjp;
 
 import com.github.shoothzj.mjp.config.MqsarConfig;
-import com.github.shoothzj.mjp.config.PulsarConfig;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.mqtt.MqttDecoder;
