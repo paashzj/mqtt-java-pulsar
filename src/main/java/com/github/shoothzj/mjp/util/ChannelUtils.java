@@ -17,26 +17,22 @@
  * under the License.
  */
 
-package com.github.shoothzj.mjp;
+package com.github.shoothzj.mjp.util;
 
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.mqtt.MqttDecoder;
-import io.netty.handler.codec.mqtt.MqttEncoder;
+import com.github.shoothzj.mjp.module.MqttSessionKey;
+import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 
-public class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
+public class ChannelUtils {
 
-    private final MqsarProcessor mqsarProcessor;
+    private static final AttributeKey<MqttSessionKey> ATTR_KEY_SESSION = AttributeKey.valueOf("mqtt_session");
 
-    public MqttChannelInitializer(MqsarServer mqsarServer) {
-        this.mqsarProcessor = new MqsarProcessor(mqsarServer);
+    public static void setMqttSession(Channel channel, MqttSessionKey mqttSessionKey) {
+        channel.attr(ATTR_KEY_SESSION).set(mqttSessionKey);
     }
 
-    @Override
-    protected void initChannel(SocketChannel socketChannel) throws Exception {
-        socketChannel.pipeline().addLast("decoder", new MqttDecoder(1024 * 1024));
-        socketChannel.pipeline().addLast("encoder", MqttEncoder.INSTANCE);
-        socketChannel.pipeline().addLast("handler", new MqttInboundHandler(mqsarProcessor));
+    public static MqttSessionKey getMqttSession(Channel channel) {
+        return channel.attr(ATTR_KEY_SESSION).get();
     }
 
 }

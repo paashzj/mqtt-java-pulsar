@@ -21,7 +21,7 @@ package com.github.shoothzj.mjp;
 
 public interface MqsarServer {
 
-    boolean mqttAuth(String username, String password, String clientId);
+    boolean mqttAuth(String username, byte[] password, String clientId);
 
     String mqttProduceTopic(String username, String clientId, String topic);
 

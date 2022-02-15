@@ -21,6 +21,8 @@ package com.github.shoothzj.mjp;
 
 import com.github.shoothzj.mjp.module.MqttSessionKey;
 import com.github.shoothzj.mjp.module.MqttTopicKey;
+import com.github.shoothzj.mjp.util.ChannelUtils;
+import com.github.shoothzj.mjp.util.ClosableUtils;
 import com.github.shoothzj.mjp.util.MqttMessageUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -44,6 +46,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -111,8 +114,8 @@ public class MqsarProcessor {
         }
         String clientId = msg.payload().clientIdentifier();
         String username = msg.payload().userName();
-        String pwd = msg.payload().password();
-        if (StringUtils.isBlank(clientId) || StringUtils.isBlank(username) || StringUtils.isBlank(pwd)) {
+        byte[] pwd = msg.payload().passwordInBytes();
+        if (StringUtils.isBlank(clientId) || StringUtils.isBlank(username)) {
             MqttConnAckMessage connAckMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
                     new MqttFixedHeader(MqttMessageType.CONNACK,
                             false, MqttQoS.AT_MOST_ONCE, false, 0),
@@ -138,8 +141,14 @@ public class MqsarProcessor {
         MqttSessionKey mqttSessionKey = new MqttSessionKey();
         mqttSessionKey.setClientId(clientId);
         mqttSessionKey.setUsername(username);
-        sessionProducerMap.put(mqttSessionKey, Lists.newArrayList());
-        sessionConsumerMap.put(mqttSessionKey, Lists.newArrayList());
+        ChannelUtils.setMqttSession(ctx.channel(), mqttSessionKey);
+        wLock.lock();
+        try {
+            sessionProducerMap.put(mqttSessionKey, Lists.newArrayList());
+            sessionConsumerMap.put(mqttSessionKey, Lists.newArrayList());
+        } finally {
+            wLock.unlock();
+        }
         MqttConnAckMessage mqttConnectMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
                 new MqttFixedHeader(MqttMessageType.CONNACK,
                         false, MqttQoS.AT_MOST_ONCE, false, 0),
@@ -164,7 +173,9 @@ public class MqsarProcessor {
     }
 
     void processDisconnect(ChannelHandlerContext ctx, MqttMessage msg) {
-        ctx.channel().close();
+        Channel channel = ctx.channel();
+        closeMqttSession(ChannelUtils.getMqttSession(channel));
+        channel.close();
     }
 
     void processConnectionLost(ChannelHandlerContext ctx) {
@@ -178,5 +189,31 @@ public class MqsarProcessor {
 
     void processPingReq(ChannelHandlerContext ctx) {
         ctx.writeAndFlush(MqttMessageUtil.pingResp());
+    }
+
+    private void closeMqttSession(@Nullable MqttSessionKey mqttSessionKey) {
+        if (mqttSessionKey == null) {
+            return;
+        }
+        wLock.lock();
+        try {
+            // find producers
+            List<MqttTopicKey> mqttTopicKeys = sessionProducerMap.get(mqttSessionKey);
+            if (mqttTopicKeys == null) {
+                return;
+            }
+            for (MqttTopicKey mqttTopicKey : mqttTopicKeys) {
+                Producer<byte[]> producer = producerMap.get(mqttTopicKey);
+                if (producer != null) {
+                    ClosableUtils.close(producer);
+                }
+                Consumer<byte[]> consumer = consumerMap.get(mqttTopicKey);
+                if (consumer != null) {
+                    ClosableUtils.close(consumer);
+                }
+            }
+        } finally {
+            wLock.unlock();
+        }
     }
 }
