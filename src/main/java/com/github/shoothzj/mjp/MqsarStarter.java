@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MqsarStarter {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         log.info("begin to start mqsar broker");
         MqsarConfig mqsarConfig = new MqsarConfig();
         MqttConfig mqttConfig = new MqttConfig();
@@ -66,17 +66,17 @@ public class MqsarStarter {
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
-            public boolean mqttAuth(String username, byte[] password, String clientId) {
+            public boolean auth(String username, byte[] password, String clientId) {
                 return true;
             }
 
             @Override
-            public String mqttProduceTopic(String username, String clientId, String topic) {
+            public String produceTopic(String username, String clientId, String topic) {
                 return String.format("persistent://public/default/%s", topic);
             }
 
             @Override
-            public String mqttConsumeTopic(String username, String clientId, String topic) {
+            public String consumeTopic(String username, String clientId, String topic) {
                 return String.format("persistent://public/default/%s", topic);
             }
         });

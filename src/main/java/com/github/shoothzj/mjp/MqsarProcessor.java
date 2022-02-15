@@ -19,6 +19,9 @@
 
 package com.github.shoothzj.mjp;
 
+import com.github.shoothzj.mjp.config.MqsarConfig;
+import com.github.shoothzj.mjp.config.MqttConfig;
+import com.github.shoothzj.mjp.config.PulsarConfig;
 import com.github.shoothzj.mjp.module.MqttSessionKey;
 import com.github.shoothzj.mjp.module.MqttTopicKey;
 import com.github.shoothzj.mjp.util.ChannelUtils;
@@ -46,6 +49,8 @@ import org.apache.commons.compress.utils.Lists;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -57,6 +62,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class MqsarProcessor {
 
     private final MqsarServer mqsarServer;
+
+    private final MqttConfig mqttConfig;
+
+    private final PulsarConfig pulsarConfig;
+
+    private final PulsarClient pulsarClient;
 
     private final ReentrantReadWriteLock.ReadLock rLock;
 
@@ -70,8 +81,13 @@ public class MqsarProcessor {
 
     private final Map<MqttTopicKey, Consumer<byte[]>> consumerMap;
 
-    public MqsarProcessor(MqsarServer mqsarServer) {
+    public MqsarProcessor(MqsarServer mqsarServer, MqsarConfig mqsarConfig) throws PulsarClientException {
         this.mqsarServer = mqsarServer;
+        this.mqttConfig = mqsarConfig.getMqttConfig();
+        this.pulsarConfig = mqsarConfig.getPulsarConfig();
+        this.pulsarClient = PulsarClient.builder()
+                .serviceUrl(String.format("pulsar://%s:%d", pulsarConfig.getHost(), pulsarConfig.getTcpPort()))
+                .build();
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         rLock = lock.readLock();
         wLock = lock.writeLock();
@@ -127,7 +143,7 @@ public class MqsarProcessor {
             return;
         }
 
-        if (!mqsarServer.mqttAuth(username, pwd, clientId)) {
+        if (!mqsarServer.auth(username, pwd, clientId)) {
             MqttConnAckMessage connAckMessage = (MqttConnAckMessage) MqttMessageFactory.newMessage(
                     new MqttFixedHeader(MqttMessageType.CONNACK,
                             false, MqttQoS.AT_MOST_ONCE, false, 0),
@@ -198,18 +214,22 @@ public class MqsarProcessor {
         wLock.lock();
         try {
             // find producers
-            List<MqttTopicKey> mqttTopicKeys = sessionProducerMap.get(mqttSessionKey);
-            if (mqttTopicKeys == null) {
-                return;
-            }
-            for (MqttTopicKey mqttTopicKey : mqttTopicKeys) {
-                Producer<byte[]> producer = producerMap.get(mqttTopicKey);
-                if (producer != null) {
-                    ClosableUtils.close(producer);
+            List<MqttTopicKey> produceTopicKeys = sessionProducerMap.get(mqttSessionKey);
+            if (produceTopicKeys != null) {
+                for (MqttTopicKey mqttTopicKey : produceTopicKeys) {
+                    Producer<byte[]> producer = producerMap.get(mqttTopicKey);
+                    if (producer != null) {
+                        ClosableUtils.close(producer);
+                    }
                 }
-                Consumer<byte[]> consumer = consumerMap.get(mqttTopicKey);
-                if (consumer != null) {
-                    ClosableUtils.close(consumer);
+            }
+            List<MqttTopicKey> consumeTopicKeys = sessionConsumerMap.get(mqttSessionKey);
+            if (consumeTopicKeys != null) {
+                for (MqttTopicKey mqttTopicKey : consumeTopicKeys) {
+                    Consumer<byte[]> consumer = consumerMap.get(mqttTopicKey);
+                    if (consumer != null) {
+                        ClosableUtils.close(consumer);
+                    }
                 }
             }
         } finally {

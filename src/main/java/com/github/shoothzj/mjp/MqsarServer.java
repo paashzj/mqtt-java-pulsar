@@ -21,10 +21,10 @@ package com.github.shoothzj.mjp;
 
 public interface MqsarServer {
 
-    boolean mqttAuth(String username, byte[] password, String clientId);
+    boolean auth(String username, byte[] password, String clientId);
 
-    String mqttProduceTopic(String username, String clientId, String topic);
+    String produceTopic(String username, String clientId, String topic);
 
-    String mqttConsumeTopic(String username, String clientId, String topic);
+    String consumeTopic(String username, String clientId, String topic);
 
 }
