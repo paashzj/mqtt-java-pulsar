@@ -27,7 +27,10 @@ import com.github.shoothzj.mjp.module.MqttTopicKey;
 import com.github.shoothzj.mjp.util.ChannelUtils;
 import com.github.shoothzj.mjp.util.ClosableUtils;
 import com.github.shoothzj.mjp.util.MqttMessageUtil;
+import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttMessage;
@@ -44,15 +47,18 @@ import io.netty.handler.codec.mqtt.MqttFixedHeader;
 import io.netty.handler.codec.mqtt.MqttConnAckMessage;
 import io.netty.handler.codec.mqtt.MqttUnacceptableProtocolVersionException;
 import io.netty.handler.codec.mqtt.MqttMessageFactory;
+import io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.Producer;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Producer;
+import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.MessageId;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -170,13 +176,98 @@ public class MqsarProcessor {
                         false, MqttQoS.AT_MOST_ONCE, false, 0),
                 new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_ACCEPTED, false),
                 null);
-        channel.writeAndFlush(mqttConnectMessage);
+        ChannelFuture future = channel.writeAndFlush(mqttConnectMessage);
     }
 
     void processPubAck(ChannelHandlerContext ctx, MqttPubAckMessage msg) {
     }
 
-    void processPublish(ChannelHandlerContext ctx, MqttPublishMessage msg) {
+    void processPublish(ChannelHandlerContext ctx, MqttPublishMessage msg) throws PulsarClientException, InterruptedException {
+
+        if (msg.fixedHeader().qosLevel() == MqttQoS.EXACTLY_ONCE) {
+            log.error("Does not support to QoS2 protocol");
+            return;
+        }
+
+        if (msg.fixedHeader().qosLevel() == MqttQoS.FAILURE) {
+            log.error("FAILURE");
+            return;
+        }
+
+        int len = msg.payload().readableBytes();
+        byte[] messageBytes = new byte[len];
+
+        msg.payload().getBytes(msg.payload().readerIndex(), messageBytes);
+        MqttSessionKey mqttSessionKey = ChannelUtils.getMqttSession(ctx.channel());
+        Preconditions.checkNotNull(mqttSessionKey);
+        String topic = mqsarServer.produceTopic(mqttSessionKey.getUsername(),
+                mqttSessionKey.getClientId(), msg.variableHeader().topicName());
+        Producer<byte[]> producer = getOrCreateProducer(mqttSessionKey, topic);
+        if (msg.fixedHeader().qosLevel() == MqttQoS.AT_MOST_ONCE) {
+            producer.sendAsync(messageBytes).
+                    thenAccept(messageId -> log.info("send message to pulsar success messageId {}", messageId))
+                    .exceptionally((e) ->{
+                        log.error("send message to pulsar fail : {}",e.getMessage());
+                        return null;
+                    });
+        }
+        if (msg.fixedHeader().qosLevel() == MqttQoS.AT_LEAST_ONCE) {
+            try {
+                MessageId messageId = producer.send(messageBytes);
+                MqttPubAckMessage pubAckMessage = (MqttPubAckMessage) MqttMessageFactory.newMessage(
+                        new MqttFixedHeader(MqttMessageType.PUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                        MqttMessageIdVariableHeader.from(msg.variableHeader().packetId()), null);
+                log.info("Send pulsar success. messageId :{}", messageId);
+                ChannelFuture future = ctx.writeAndFlush(pubAckMessage);
+                future.addListener(
+                        (ChannelFutureListener) channelFuture -> {
+                            if (channelFuture.isSuccess()) {
+                                log.info("send message to mqtt client success ");
+                            } else {
+                                log.error("send message to mqtt client fail");
+                            }
+                        }
+                );
+
+            } catch (PulsarClientException e) {
+                log.error("Send pulsar error : {}", e.getMessage());
+            }
+        }
+
+    }
+
+    private Producer<byte[]> getOrCreateProducer(MqttSessionKey mqttSessionKey, String topic) throws PulsarClientException {
+
+        List<MqttTopicKey> mqttTopicKeys = sessionProducerMap.get(mqttSessionKey);
+        if (mqttTopicKeys.size() != 0) {
+            for (MqttTopicKey mqttTopicKey : mqttTopicKeys) {
+                Producer<byte[]> producer = producerMap.get(mqttTopicKey);
+                if (producer == null && topic.equals(mqttTopicKey.getTopic())) {
+                    producer = pulsarClient.newProducer()
+                            .topic(mqttTopicKey.getTopic())
+                            .create();
+                    wLock.lock();
+                    producerMap.put(mqttTopicKey, producer);
+                    wLock.unlock();
+                    log.info("begin to create producer. mqttTopic {}, topic {}", topic, topic);
+                    return producer;
+                }
+            }
+        }
+        MqttTopicKey mqttTopicKey = new MqttTopicKey();
+        mqttTopicKey.setMqttSessionKey(mqttSessionKey);
+        mqttTopicKey.setTopic(topic);
+        ArrayList<MqttTopicKey> topics = Lists.newArrayList();
+        topics.add(mqttTopicKey);
+        Producer<byte[]> producer = pulsarClient.newProducer()
+                .topic(topic)
+                .create();
+        wLock.lock();
+        sessionProducerMap.put(mqttSessionKey, topics);
+        producerMap.put(mqttTopicKey, producer);
+        wLock.unlock();
+        log.info("begin to create producer. mqttTopic {}, topic {}", topic, topic);
+        return producer;
     }
 
     void processPubRel(ChannelHandlerContext ctx, MqttMessage msg) {
