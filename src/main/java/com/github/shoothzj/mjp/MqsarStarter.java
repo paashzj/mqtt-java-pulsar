@@ -64,6 +64,7 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE
         ));
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
+        mqsarConfig.setPulsarConfig(pulsarConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
             public boolean auth(String username, byte[] password, String clientId) {

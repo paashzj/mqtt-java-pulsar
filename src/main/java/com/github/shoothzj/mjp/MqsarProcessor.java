@@ -27,6 +27,7 @@ import com.github.shoothzj.mjp.module.MqttTopicKey;
 import com.github.shoothzj.mjp.util.ChannelUtils;
 import com.github.shoothzj.mjp.util.ClosableUtils;
 import com.github.shoothzj.mjp.util.MqttMessageUtil;
+import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
@@ -44,15 +45,18 @@ import io.netty.handler.codec.mqtt.MqttFixedHeader;
 import io.netty.handler.codec.mqtt.MqttConnAckMessage;
 import io.netty.handler.codec.mqtt.MqttUnacceptableProtocolVersionException;
 import io.netty.handler.codec.mqtt.MqttMessageFactory;
+import io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.Producer;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Producer;
+import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.MessageId;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -110,8 +114,8 @@ public class MqsarProcessor {
                                 MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION,
                                 false), null);
                 channel.writeAndFlush(connAckMessage);
-                log.error("connection refused due to invalid protocol, client address[{}]", channel.remoteAddress());
-                channel.close();
+                log.error("Connection refused due to invalid protocol, client address [{}]", channel.remoteAddress());
+                ctx.close();
                 return;
             } else if (cause instanceof MqttIdentifierRejectedException) {
                 // ineligible clientId
@@ -121,11 +125,11 @@ public class MqsarProcessor {
                         new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED,
                                 false), null);
                 channel.writeAndFlush(connAckMessage);
-                log.error("ineligible clientId, client address[{}]", channel.remoteAddress());
-                channel.close();
+                log.error("Ineligible clientId, client address [{}]", channel.remoteAddress());
+                ctx.close();
                 return;
             }
-            channel.close();
+            ctx.close();
             return;
         }
         String clientId = msg.payload().clientIdentifier();
@@ -138,8 +142,8 @@ public class MqsarProcessor {
                     new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED,
                             false), null);
             channel.writeAndFlush(connAckMessage);
-            log.error("the clientId username pwd cannot be empty, client address[{}]", channel.remoteAddress());
-            channel.close();
+            log.error("The clientId username pwd cannot be empty, client address [{}]", channel.remoteAddress());
+            ctx.close();
             return;
         }
 
@@ -150,7 +154,7 @@ public class MqsarProcessor {
                     new MqttConnAckVariableHeader(MqttConnectReturnCode.CONNECTION_REFUSED_USE_ANOTHER_SERVER,
                             false), null);
             channel.writeAndFlush(connAckMessage);
-            channel.close();
+            ctx.close();
             return;
         }
 
@@ -177,6 +181,99 @@ public class MqsarProcessor {
     }
 
     void processPublish(ChannelHandlerContext ctx, MqttPublishMessage msg) {
+        MqttSessionKey mqttSession = ChannelUtils.getMqttSession(ctx.channel());
+        if (mqttSession == null) {
+            log.error("The clientId username pwd cannot be empty, client address [{}]", ctx.channel().remoteAddress());
+            ctx.close();
+            return;
+        }
+        if (msg.fixedHeader().qosLevel() == MqttQoS.EXACTLY_ONCE) {
+            log.error("Does not support QoS2 protocol. clientId [{}], username [{}] ", mqttSession.getClientId(), mqttSession.getUsername());
+            return;
+        }
+
+        if (msg.fixedHeader().qosLevel() == MqttQoS.FAILURE) {
+            log.error("Failure . clientId [{}], username [{}] ", mqttSession.getClientId(), mqttSession.getUsername());
+            return;
+        }
+
+        int len = msg.payload().readableBytes();
+        byte[] messageBytes = new byte[len];
+        msg.payload().getBytes(msg.payload().readerIndex(), messageBytes);
+        MqttSessionKey mqttSessionKey = ChannelUtils.getMqttSession(ctx.channel());
+        Preconditions.checkNotNull(mqttSessionKey);
+        String topic = mqsarServer.produceTopic(mqttSessionKey.getUsername(),
+                mqttSessionKey.getClientId(), msg.variableHeader().topicName());
+        Producer<byte[]> producer;
+        try {
+            producer = getOrCreateProducer(mqttSessionKey, topic);
+        } catch (PulsarClientException e) {
+            log.error("Create pulsar producer exception ", e);
+            ctx.close();
+            return;
+        }
+        if (msg.fixedHeader().qosLevel() == MqttQoS.AT_MOST_ONCE) {
+            producer.sendAsync(messageBytes).
+                    thenAccept(messageId -> log.info("Send message to pulsar success messageId {}", messageId))
+                    .exceptionally((e) -> {
+                        log.error("Send message to pulsar fail: {}", e.getMessage());
+                        return null;
+                    });
+        }
+        if (msg.fixedHeader().qosLevel() == MqttQoS.AT_LEAST_ONCE) {
+            try {
+                MessageId messageId = producer.send(messageBytes);
+                MqttPubAckMessage pubAckMessage = (MqttPubAckMessage) MqttMessageFactory.newMessage(
+                        new MqttFixedHeader(MqttMessageType.PUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0),
+                        MqttMessageIdVariableHeader.from(msg.variableHeader().packetId()), null);
+                log.info("Send pulsar success. messageId: {}", messageId);
+                ctx.writeAndFlush(pubAckMessage);
+            } catch (PulsarClientException e) {
+                log.error("Send pulsar error: {}", e.getMessage());
+            }
+        }
+    }
+
+    private Producer<byte[]> getOrCreateProducer(MqttSessionKey mqttSessionKey, String topic)
+            throws PulsarClientException {
+        List<MqttTopicKey> mqttTopicKeys;
+        wLock.lock();
+        try {
+            mqttTopicKeys = sessionProducerMap.get(mqttSessionKey);
+            if (mqttTopicKeys.size() == 0) {
+                MqttTopicKey mqttTopicKey = new MqttTopicKey();
+                mqttTopicKey.setMqttSessionKey(mqttSessionKey);
+                mqttTopicKey.setTopic(topic);
+                ArrayList<MqttTopicKey> topics = Lists.newArrayList();
+                topics.add(mqttTopicKey);
+                Producer<byte[]> producer = pulsarClient.newProducer().topic(topic).create();
+                sessionProducerMap.put(mqttSessionKey, topics);
+                producerMap.put(mqttTopicKey, producer);
+                log.info("begin to create producer. mqttTopic {}, topic {}", topic, topic);
+                return producer;
+            }
+        } finally {
+            wLock.unlock();
+        }
+
+        Producer<byte[]> producer = null;
+        for (MqttTopicKey mqttTopicKey : mqttTopicKeys) {
+            wLock.lock();
+            try {
+                producer = producerMap.get(mqttTopicKey);
+                if (producer == null && topic.equals(mqttTopicKey.getTopic())) {
+                    producer = pulsarClient.newProducer()
+                            .topic(mqttTopicKey.getTopic())
+                            .create();
+                    producerMap.put(mqttTopicKey, producer);
+                    log.info("begin to create producer. mqttTopic {}, topic {}", topic, topic);
+                }
+            } finally {
+                wLock.unlock();
+            }
+        }
+        Preconditions.checkNotNull(producer);
+        return producer;
     }
 
     void processPubRel(ChannelHandlerContext ctx, MqttMessage msg) {
@@ -191,7 +288,7 @@ public class MqsarProcessor {
     void processDisconnect(ChannelHandlerContext ctx, MqttMessage msg) {
         Channel channel = ctx.channel();
         closeMqttSession(ChannelUtils.getMqttSession(channel));
-        channel.close();
+        ctx.close();
     }
 
     void processConnectionLost(ChannelHandlerContext ctx) {
