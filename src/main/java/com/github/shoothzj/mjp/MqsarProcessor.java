@@ -56,7 +56,6 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -188,7 +187,8 @@ public class MqsarProcessor {
             return;
         }
         if (msg.fixedHeader().qosLevel() == MqttQoS.EXACTLY_ONCE) {
-            log.error("does not support QoS2 protocol. clientId [{}], username [{}] ", mqttSession.getClientId(), mqttSession.getUsername());
+            log.error("does not support QoS2 protocol. clientId [{}], username [{}] ",
+                    mqttSession.getClientId(), mqttSession.getUsername());
             return;
         }
 
@@ -205,17 +205,11 @@ public class MqsarProcessor {
         String topic = mqsarServer.produceTopic(mqttSessionKey.getUsername(),
                 mqttSessionKey.getClientId(), msg.variableHeader().topicName());
         Producer<byte[]> producer;
-        try {
-            producer = getOrCreateProducer(mqttSessionKey, topic);
-        } catch (PulsarClientException e) {
-            log.error("clientId [{}], username [{}]. create pulsar producer exception: "
-                    , mqttSession.getClientId(), mqttSession.getUsername(), e);
-            ctx.close();
-            return;
-        }
+        producer = getOrCreateProducer(mqttSessionKey, topic);
         if (msg.fixedHeader().qosLevel() == MqttQoS.AT_MOST_ONCE) {
             producer.sendAsync(messageBytes).
-                    thenAccept(messageId -> log.info("clientId [{}], username [{}]. send message to pulsar success messageId: {}",
+                    thenAccept(messageId -> log.info("clientId [{}]," +
+                                    " username [{}]. send message to pulsar success messageId: {}",
                             mqttSession.getClientId(), mqttSession.getUsername(), messageId))
                     .exceptionally((e) -> {
                         log.error("clientId [{}], username [{}]. send message to pulsar fail: ",
@@ -239,31 +233,8 @@ public class MqsarProcessor {
         }
     }
 
-    private Producer<byte[]> getOrCreateProducer(MqttSessionKey mqttSessionKey, String topic)
-            throws PulsarClientException {
-
-        List<MqttTopicKey> topicKeys = sessionProducerMap.computeIfAbsent(mqttSessionKey, sessionKey -> {
-            MqttTopicKey mqttTopicKey = new MqttTopicKey();
-            mqttTopicKey.setMqttSessionKey(mqttSessionKey);
-            mqttTopicKey.setTopic(topic);
-            ArrayList<MqttTopicKey> topics = Lists.newArrayList();
-            topics.add(mqttTopicKey);
-            topics.add(mqttTopicKey);
-            return topics;
-        });
-
-        MqttTopicKey mqttTopicKey = topicKeys.get(0);
-        Producer<byte[]> producer = producerMap.computeIfAbsent(mqttTopicKey, topicKey -> {
-            Producer<byte[]> producer1 = null;
-            try {
-                producer1 = pulsarClient.newProducer().topic(topic).create();
-            } catch (PulsarClientException e) {
-                log.error("create pulsar producer fail: ", e);
-            }
-            return producer1;
-        });
-        Preconditions.checkNotNull(producer);
-        return producer;
+    private Producer<byte[]> getOrCreateProducer(MqttSessionKey mqttSessionKey, String topic) {
+        throw new UnsupportedOperationException("not implement yet");
     }
 
     void processPubRel(ChannelHandlerContext ctx, MqttMessage msg) {
