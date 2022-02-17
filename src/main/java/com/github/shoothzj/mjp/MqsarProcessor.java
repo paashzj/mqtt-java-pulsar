@@ -208,8 +208,8 @@ public class MqsarProcessor {
         producer = getOrCreateProducer(mqttSessionKey, topic);
         if (msg.fixedHeader().qosLevel() == MqttQoS.AT_MOST_ONCE) {
             producer.sendAsync(messageBytes).
-                    thenAccept(messageId -> log.info("clientId [{}]," +
-                                    " username [{}]. send message to pulsar success messageId: {}",
+                    thenAccept(messageId -> log.info("clientId [{}],"
+                                    + " username [{}]. send message to pulsar success messageId: {}",
                             mqttSession.getClientId(), mqttSession.getUsername(), messageId))
                     .exceptionally((e) -> {
                         log.error("clientId [{}], username [{}]. send message to pulsar fail: ",
