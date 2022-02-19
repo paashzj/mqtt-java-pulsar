@@ -246,6 +246,16 @@ public class MqsarProcessor {
         mqttTopicKey.setTopic(topic);
         mqttTopicKey.setMqttSessionKey(mqttSessionKey);
 
+        rLock.lock();
+        try {
+            Producer<byte[]> producer = producerMap.get(mqttTopicKey);
+            if (producer != null) {
+                return producer;
+            }
+        } finally {
+            rLock.unlock();
+        }
+
         wLock.lock();
         try {
             Producer<byte[]> producer = producerMap.get(mqttTopicKey);
