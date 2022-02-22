@@ -17,21 +17,7 @@
  * under the License.
  */
 
-package com.github.shoothzj.mjp.config;
+package com.github.shoothzj.mjp.metric;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
-public class MqsarConfig {
-
-    private MqttConfig mqttConfig;
-
-    private PulsarConfig pulsarConfig;
-
-    private  VertxConfig vertxConfig;
-
-    public MqsarConfig() {
-    }
+public class PrometheusReport {
 }

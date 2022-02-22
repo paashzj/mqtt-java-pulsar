@@ -17,21 +17,33 @@
  * under the License.
  */
 
-package com.github.shoothzj.mjp.config;
+package com.github.shoothzj.mjp.vertx;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Setter
-@Getter
-public class MqsarConfig {
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.web.Router;
+import lombok.extern.slf4j.Slf4j;
 
-    private MqttConfig mqttConfig;
+@Slf4j
+public class VertxServer {
 
-    private PulsarConfig pulsarConfig;
+    public void startServer(int port, String host){
+        Vertx vertx = Vertx.vertx();
+        Router router = Router.router(vertx);
+        router.get("/metrics").handler(request -> {
+            HttpServerResponse response = request.response();
+            response.send("success !!!!");
+        });
 
-    private  VertxConfig vertxConfig;
+        Vertx.vertx().deployVerticle(new AbstractVerticle() {
+            @Override
+            public void start() throws Exception {
+               vertx.createHttpServer().requestHandler(router).listen(port, host);
+            }
+        });
 
-    public MqsarConfig() {
     }
+
 }

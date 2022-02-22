@@ -19,11 +19,7 @@
 
 package com.github.shoothzj.mjp;
 
-import com.github.shoothzj.mjp.config.MqsarConfig;
-import com.github.shoothzj.mjp.config.MqttConfig;
-import com.github.shoothzj.mjp.config.PulsarConfig;
-import com.github.shoothzj.mjp.config.PulsarConsumeConfig;
-import com.github.shoothzj.mjp.config.PulsarProduceConfig;
+import com.github.shoothzj.mjp.config.*;
 import com.github.shoothzj.mjp.constant.ConfigConst;
 import com.github.shoothzj.mjp.util.EnvUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +59,19 @@ public class MqsarStarter {
                 ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_ENV_NAME,
                 ConfigConst.PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE
         ));
+
+        VertxConfig vertxConfig = new VertxConfig();
+        vertxConfig.setPort(EnvUtil.getIntVar(
+                ConfigConst.VERTX_SERVER_PORT,
+                ConfigConst.VERTX_SERVER_ENV_PORT,
+                ConfigConst.VERTX_SERVER_DEFAULT_PORT
+        ));
+        vertxConfig.setHost(EnvUtil.getStringVar(
+                ConfigConst.VERTX_SERVER_HOST,
+                ConfigConst.VERTX_SERVER_ENV_HOST,
+                ConfigConst.VERTX_SERVER_DEFAULT_HOST
+        ));
+        mqsarConfig.setVertxConfig(vertxConfig);
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         mqsarConfig.setPulsarConfig(pulsarConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {

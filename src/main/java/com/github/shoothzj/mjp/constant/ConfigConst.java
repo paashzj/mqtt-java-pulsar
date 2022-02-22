@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -71,5 +71,17 @@ public class ConfigConst {
     public static final String PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_ENV_NAME = "MQSAR_PULSAR_CONSUME_RECEIVER_QUEUE_SIZE";
 
     public static final int PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE = 1000;
+
+    public static final int VERTX_SERVER_DEFAULT_PORT = 20000;
+
+    public static final String VERTX_SERVER_PORT = "mqsar.vertx.port";
+
+    public static final String VERTX_SERVER_ENV_PORT = "VERTX_SERVER_PORT";
+
+    public static final String VERTX_SERVER_DEFAULT_HOST = "0.0.0.0";
+
+    public static final String VERTX_SERVER_HOST = "mqsar.vertx.host";
+
+    public static final String VERTX_SERVER_ENV_HOST = "VERTX_SERVER_HOST";
 
 }

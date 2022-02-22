@@ -20,7 +20,9 @@
 package com.github.shoothzj.mjp;
 
 import com.github.shoothzj.mjp.config.MqsarConfig;
+import com.github.shoothzj.mjp.config.VertxConfig;
 import com.github.shoothzj.mjp.util.EventLoopUtil;
+import com.github.shoothzj.mjp.vertx.VertxServer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -48,6 +50,10 @@ public class MqsarBroker {
         serverBootstrap.channel(EventLoopUtil.getServerSocketChannelClass(workerGroup));
         serverBootstrap.childHandler(new MqttChannelInitializer(mqsarServer, mqsarConfig));
         serverBootstrap.bind(mqsarConfig.getMqttConfig().getHost(), mqsarConfig.getMqttConfig().getPort());
+      //  start vertx server
+        VertxConfig vertxConfig = mqsarConfig.getVertxConfig();
+        VertxServer vertxServer = new VertxServer();
+        vertxServer.startServer(vertxConfig.getPort(), vertxConfig.getHost());
     }
 
     public String getMqttHost() {

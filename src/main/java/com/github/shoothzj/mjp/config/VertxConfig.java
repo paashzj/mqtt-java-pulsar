@@ -24,14 +24,11 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class MqsarConfig {
+public class VertxConfig {
 
-    private MqttConfig mqttConfig;
+    private int port;
+    private String host;
 
-    private PulsarConfig pulsarConfig;
-
-    private  VertxConfig vertxConfig;
-
-    public MqsarConfig() {
+    public VertxConfig() {
     }
 }
