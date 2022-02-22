@@ -72,4 +72,16 @@ public class ConfigConst {
 
     public static final int PULSAR_CONSUME_RECEIVER_QUEUE_SIZE_DEFAULT_VALUE = 1000;
 
+    public static final String HTTP_SERVER_HOST = "mqsar.http.host";
+
+    public static final String HTTP_SERVER_ENV_HOST = "HTTP_SERVER_HOST";
+
+    public static final String HTTP_SERVER_DEFAULT_HOST = "0.0.0.0";
+
+    public static final String HTTP_SERVER_PORT = "mqsar.http.port";
+
+    public static final String HTTP_SERVER_ENV_PORT = "HTTP_SERVER_PORT";
+
+    public static final int HTTP_SERVER_DEFAULT_PORT = 20000;
+
 }
