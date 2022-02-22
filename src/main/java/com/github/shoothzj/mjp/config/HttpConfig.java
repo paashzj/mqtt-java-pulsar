@@ -24,14 +24,11 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class MqsarConfig {
+public class HttpConfig {
 
-    private MqttConfig mqttConfig;
+    private String host;
+    private int port;
 
-    private PulsarConfig pulsarConfig;
-
-    private HttpConfig httpConfig;
-
-    public MqsarConfig() {
+    public HttpConfig() {
     }
 }

@@ -19,6 +19,7 @@
 
 package com.github.shoothzj.mjp;
 
+import com.github.shoothzj.mjp.config.HttpConfig;
 import com.github.shoothzj.mjp.config.MqsarConfig;
 import com.github.shoothzj.mjp.config.MqttConfig;
 import com.github.shoothzj.mjp.config.PulsarConfig;
@@ -65,6 +66,18 @@ public class MqsarStarter {
         ));
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         mqsarConfig.setPulsarConfig(pulsarConfig);
+        HttpConfig httpConfig = new HttpConfig();
+        httpConfig.setPort(EnvUtil.getIntVar(
+                ConfigConst.HTTP_SERVER_PORT,
+                ConfigConst.HTTP_SERVER_ENV_PORT,
+                ConfigConst.HTTP_SERVER_DEFAULT_PORT
+        ));
+        httpConfig.setHost(EnvUtil.getStringVar(
+                ConfigConst.HTTP_SERVER_HOST,
+                ConfigConst.HTTP_SERVER_ENV_HOST,
+                ConfigConst.HTTP_SERVER_DEFAULT_HOST
+        ));
+        mqsarConfig.setHttpConfig(httpConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
             public boolean auth(String username, byte[] password, String clientId) {
