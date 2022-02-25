@@ -19,7 +19,9 @@
 
 package com.github.shoothzj.mjp;
 
+import com.github.shoothzj.mjp.config.HttpConfig;
 import com.github.shoothzj.mjp.config.MqsarConfig;
+import com.github.shoothzj.mjp.http.VertxServer;
 import com.github.shoothzj.mjp.util.EventLoopUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -43,6 +45,9 @@ public class MqsarBroker {
     }
 
     public void start() throws Exception {
+        HttpConfig httpConfig = mqsarConfig.getHttpConfig();
+        VertxServer vertxServer = new VertxServer();
+        vertxServer.startServer(httpConfig.getPort(), httpConfig.getHost());
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(acceptorGroup, workerGroup);
         serverBootstrap.channel(EventLoopUtil.getServerSocketChannelClass(workerGroup));

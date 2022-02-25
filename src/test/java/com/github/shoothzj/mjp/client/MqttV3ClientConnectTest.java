@@ -25,18 +25,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 @Slf4j
 public class MqttV3ClientConnectTest {
 
-    private MqsarBroker mqsarBroker;
+    private static MqsarBroker mqsarBroker;
 
-    @Before
-    public void start() throws Exception{
+    @BeforeAll
+    public static void start() throws Exception{
         mqsarBroker = MqsarTestUtil.setupMqsar();
     }
 
@@ -51,7 +51,7 @@ public class MqttV3ClientConnectTest {
         String url = String.format("tcp://%s:%d", mqsarBroker.getMqttHost(), mqsarBroker.getMqttPort());
         MqttClient mqttClient = new MqttClient(url, "clientId001");
         mqttClient.connect(connectOpt);
-        Assert.assertTrue(mqttClient.isConnected());
+        Assertions.assertTrue(mqttClient.isConnected());
     }
 
     @Test
@@ -68,11 +68,11 @@ public class MqttV3ClientConnectTest {
         } catch (MqttException ignored) {
         }
         assert mqttClient != null;
-        Assert.assertFalse(mqttClient.isConnected());
+        Assertions.assertFalse(mqttClient.isConnected());
     }
 
-    @After
-    public void end(){
+    @AfterAll
+    public static void end(){
 
     }
 
