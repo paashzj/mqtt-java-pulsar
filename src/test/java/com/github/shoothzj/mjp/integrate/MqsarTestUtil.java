@@ -21,6 +21,7 @@ package com.github.shoothzj.mjp.integrate;
 
 import com.github.shoothzj.mjp.MqsarBroker;
 import com.github.shoothzj.mjp.MqsarServer;
+import com.github.shoothzj.mjp.config.HttpConfig;
 import com.github.shoothzj.mjp.config.MqsarConfig;
 import com.github.shoothzj.mjp.config.MqttConfig;
 import com.github.shoothzj.mjp.config.PulsarConfig;
@@ -59,6 +60,10 @@ public class MqsarTestUtil {
         PulsarConsumeConfig pulsarConsumeConfig = new PulsarConsumeConfig();
         pulsarConfig.setConsumeConfig(pulsarConsumeConfig);
         mqsarConfig.setPulsarConfig(pulsarConfig);
+        HttpConfig httpConfig = new HttpConfig();
+        httpConfig.setHost(ConfigConst.HTTP_SERVER_DEFAULT_HOST);
+        httpConfig.setPort(SocketUtil.getFreePort());
+        mqsarConfig.setHttpConfig(httpConfig);
         MqsarBroker mqsarBroker = new MqsarBroker(mqsarConfig, new MqsarServer() {
             @Override
             public boolean auth(String username, byte[] password, String clientId) {
